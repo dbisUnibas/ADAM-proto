@@ -1,0 +1,134 @@
+syntax = "proto3";
+
+package ch.unibas.dmi.dbis.adam.http.grpc;
+
+service AdamDefinition {
+  rpc CreateEntity(CreateEntityMessage) returns (AckMessage) {}
+  rpc DropEntity(EntityNameMessage) returns (AckMessage) {}
+  rpc Insert(InsertMessage) returns (AckMessage) {}
+  rpc Index(IndexMessage) returns (AckMessage) {}
+  rpc DropIndex(IndexNameMessage) returns (AckMessage) {}
+  rpc Count(EntityNameMessage) returns (AckMessage) {}
+}
+
+service AdamSearch {
+  rpc DoStandardQuery(SimpleQueryMessage) returns (QueryResponseListMessage) {}
+  rpc DoSequentialQuery(SimpleSequentialQueryMessage) returns (QueryResponseListMessage) {}
+  rpc DoIndexQuery(SimpleIndexQueryMessage) returns (QueryResponseListMessage) {}
+  rpc DoProgressiveQuery(SimpleQueryMessage) returns (stream QueryResponseInfoMessage) {}
+  rpc DoTimedProgressiveQuery(TimedQueryMessage) returns (QueryResponseInfoMessage) {}
+}
+
+
+message CreateEntityMessage {
+  string entity = 1;
+  enum FieldType {
+    LONG = 0;
+    INT = 1;
+    FLOAT = 2;
+    DOUBLE = 3;
+    STRING = 4;
+    BOOLEAN = 5;
+  }
+  map<string, FieldType> fields = 2;
+}
+
+message EntityNameMessage {
+  string entity = 1;
+}
+
+message IndexNameMessage {
+  string entity = 1;
+}
+
+message AckMessage {
+  enum Code {
+    OK = 0;
+    ERROR = 1;
+  }
+  Code code = 1;
+  string message = 2;
+}
+
+//insert and update (if id exists already)
+message InsertMessage {
+  string entity = 1;
+  int64 id = 2;
+  repeated float vector = 3 [packed=true];
+  map<string, string> metadata = 4;
+}
+
+message IndexMessage {
+  string entity = 1;
+  enum IndexType {
+    lsh = 0;
+    sh = 1;
+    ecp = 2;
+    vaf = 3;
+    vav = 4;
+  }
+  IndexType indextype = 2;
+  int32 norm = 3;
+  map<string, string> options = 4;
+}
+
+message NearestNeighbourQueryMessage {
+  repeated float query = 1 [packed=true];
+  int32 norm = 2;
+  int32 k = 3;
+  bool indexOnly = 4;
+  map<string, string> options = 5;
+}
+
+message BooleanQueryMessage {
+  map<string, string> where = 1;
+  repeated JoinMessage joins = 2;
+
+  message JoinMessage {
+    string table = 1;
+    repeated string columns = 2;
+  }
+}
+
+
+
+message SimpleQueryMessage {
+  string entity = 1;
+  string hint = 2;
+  NearestNeighbourQueryMessage nnq = 3;
+  BooleanQueryMessage bq = 4;
+}
+
+message SimpleSequentialQueryMessage {
+  string entity = 1;
+  NearestNeighbourQueryMessage nnq = 2;
+  BooleanQueryMessage bq = 3;
+}
+
+message SimpleIndexQueryMessage {
+  string index = 1;
+  NearestNeighbourQueryMessage nnq = 2;
+  BooleanQueryMessage bq = 3;
+}
+
+message TimedQueryMessage {
+  string entity = 1;
+  NearestNeighbourQueryMessage nnq = 2;
+  BooleanQueryMessage bq = 3;
+  int64 time = 4;
+}
+
+message QueryResponseInfoMessage {
+  double confidence = 1;
+  QueryResponseListMessage queryResponseList = 2;
+}
+
+message QueryResponseMessage {
+  int64 id = 1;
+  double distance = 2;
+  string metadata = 3;
+}
+
+message QueryResponseListMessage {
+  repeated QueryResponseMessage responses = 1;
+}
