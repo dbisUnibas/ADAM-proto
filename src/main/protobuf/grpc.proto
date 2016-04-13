@@ -10,7 +10,7 @@ service AdamDefinition {
   rpc Index(IndexMessage) returns (AckMessage) {}
   rpc DropIndex(IndexNameMessage) returns (AckMessage) {}
   rpc Count(EntityNameMessage) returns (AckMessage) {}
-  rpc RandomData(RandomDataMessage) returns (AckMessage) {}
+  rpc PrepareForDemo(GenerateRandomEntityMessage) returns (AckMessage) {}
 }
 
 service AdamSearch {
@@ -22,7 +22,7 @@ service AdamSearch {
   rpc DoIndexQuery(SimpleIndexQueryMessage) returns (QueryResponseListMessage) {}
   rpc DoProgressiveQuery(SimpleQueryMessage) returns (stream QueryResponseInfoMessage) {}
   rpc DoTimedProgressiveQuery(TimedQueryMessage) returns (QueryResponseInfoMessage) {}
-  rpc DoCompoundQuery(CompoundQueryMessage) returns (QueryResponseListMessage) {}
+  rpc DoCompoundQuery(CompoundQueryMessage) returns (CompoundQueryResponseListMessage) {}
 }
 
 
@@ -47,7 +47,7 @@ message IndexNameMessage {
   string index = 1;
 }
 
-message RandomDataMessage {
+message GenerateRandomEntityMessage {
   string entity = 1;
   int32 ntuples = 2;
   int32 ndims = 3;
@@ -77,11 +77,12 @@ message InsertMessage {
 
 
 enum IndexType {
-    lsh = 0;
-    sh = 1;
-    ecp = 2;
-    vaf = 3;
-    vav = 4;
+    ecp = 0;
+    lsh = 1;
+    pq = 2;
+    sh = 3;
+    vaf = 4;
+    vav = 5;
 }
 
 message IndexMessage {
@@ -154,9 +155,11 @@ message TimedQueryMessage {
 }
 
 message QueryResponseInfoMessage {
-  double confidence = 1;
-  IndexType indextype = 2;
-  QueryResponseListMessage queryResponseList = 3;
+  string id = 1;
+  double confidence = 2;
+  int64 time = 3;
+  IndexType indextype = 4;
+  QueryResponseListMessage queryResponseList = 5;
 }
 
 message QueryResponseMessage {
@@ -169,11 +172,17 @@ message QueryResponseListMessage {
   repeated QueryResponseMessage responses = 1;
 }
 
+message CompoundQueryResponseListMessage {
+  repeated QueryResponseInfoMessage intermediateResponses = 1;
+  QueryResponseListMessage finalResponse = 2;
+}
+
 message CompoundQueryMessage {
   string entity = 1;
   NearestNeighbourQueryMessage nnq = 2;
-  ExpressionQueryMessage indexFilterExpression = 3;
+  SubExpressionQueryMessage indexFilterExpression = 3;
   bool withMetadata = 4;
+  string id = 5;
 }
 
 //experimental
@@ -183,21 +192,31 @@ message ExpressionQueryMessage {
       INTERSECT = 1;
       EXCEPT = 2;
     }
+
+   enum OperationOrder {
+      LEFTFIRST = 0;
+      RIGHTFIRST = 1;
+      PARALLEL = 2;
+    }
+
+   SubExpressionQueryMessage left = 1;
+   Operation operation = 2;
+   OperationOrder order = 3;
+   SubExpressionQueryMessage right = 4;
+   string id = 5;
+}
+
+message SubExpressionQueryMessage {
    //Any is not yet supported
    //import "google/protobuf/any.proto";
    //google.protobuf.Any left = 1;
    //Operation operation = 2;
    //google.protobuf.Any right = 3;
-
-   oneof left {
-       SimpleSequentialQueryMessage lssqm = 2;
-       SimpleIndexQueryMessage lsiqm = 3;
-       ExpressionQueryMessage leqm = 4;
+ oneof submessage {
+       SimpleSequentialQueryMessage ssqm = 1;
+       SimpleSpecifiedIndexQueryMessage ssiqm = 2;
+       SimpleIndexQueryMessage siqm = 3;
+       ExpressionQueryMessage eqm = 4;
      }
-   Operation operation = 1;
-   oneof right {
-       SimpleSequentialQueryMessage rssqm = 5;
-       SimpleIndexQueryMessage rsiqm = 6;
-       ExpressionQueryMessage reqm = 7;
-     }
+ string id = 5;
 }
