@@ -3,78 +3,58 @@ syntax = "proto3";
 option java_package = "ch.unibas.dmi.dbis.adam.http";
 
 
+
+
+
+//****  SERVICES ****//
+
+
 service AdamDefinition {
   rpc CreateEntity(CreateEntityMessage) returns (AckMessage) {}
   rpc DropEntity(EntityNameMessage) returns (AckMessage) {}
   rpc Insert(stream InsertMessage) returns (AckMessage) {}
+  //creates an index on the data
   rpc Index(IndexMessage) returns (AckMessage) {}
+  rpc GenerateAllIndexes(IndexMessage) returns (AckMessage) {}
   rpc DropIndex(IndexNameMessage) returns (AckMessage) {}
   rpc Count(EntityNameMessage) returns (AckMessage) {}
-  rpc PrepareForDemo(GenerateRandomEntityMessage) returns (AckMessage) {}
+  //generates an entity with random data and with all available indexes (for demo purposes)
+  rpc GenerateRandomData(GenerateRandomDataMessage) returns (AckMessage) {}
+  rpc ListEntities(Empty) returns (EntitiesMessage) {}
+  rpc GetEntityProperties(EntityNameMessage) returns (EntityPropertiesMessage) {}
+  rpc RepartitionIndexData(RepartitionMessage) returns (AckMessage) {}
+  rpc SetIndexWeight(IndexWeightMessage) returns (AckMessage) {}
 }
 
 service AdamSearch {
+  //caches an index explicitly (before performing a query to speed up retrieval time)
   rpc CacheIndex (IndexNameMessage) returns (AckMessage) {}
   rpc CacheEntity (EntityNameMessage) returns (AckMessage) {}
-  rpc DoStandardQuery(SimpleQueryMessage) returns (QueryResponseListMessage) {}
-  rpc DoSequentialQuery(SimpleSequentialQueryMessage) returns (QueryResponseListMessage) {}
-  rpc DoSpecifiedIndexQuery(SimpleSpecifiedIndexQueryMessage) returns (QueryResponseListMessage) {}
-  rpc DoIndexQuery(SimpleIndexQueryMessage) returns (QueryResponseListMessage) {}
+  //performs a query on an entity with hints on which search method to use
+  //(if no hint is specified a fallback is used)
+  rpc DoStandardQuery(SimpleQueryMessage) returns (QueryResponseInfoMessage) {}
+  //performs a sequential query
+  rpc DoSequentialQuery(SimpleSequentialQueryMessage) returns (QueryResponseInfoMessage) {}
+  //performs a query with specified index name
+  rpc DoSpecifiedIndexQuery(SimpleSpecifiedIndexQueryMessage) returns (QueryResponseInfoMessage) {}
+  //performs a query with specified entity name and index type
+  rpc DoIndexQuery(SimpleIndexQueryMessage) returns (QueryResponseInfoMessage) {}
+  //performs a progressive query, note that the results are a stream
   rpc DoProgressiveQuery(SimpleQueryMessage) returns (stream QueryResponseInfoMessage) {}
+  //performs a timed progressive query which will stop after the specified running time
   rpc DoTimedProgressiveQuery(TimedQueryMessage) returns (QueryResponseInfoMessage) {}
-  rpc DoCompoundQuery(CompoundQueryMessage) returns (CompoundQueryResponseListMessage) {}
+  //performs a compound query
+  rpc DoCompoundQuery(CompoundQueryMessage) returns (CompoundQueryResponseInfoMessage) {}
+  //performs a boolean query
+  rpc DoBooleanQuery(SimpleBooleanQueryMessage) returns (QueryResponseInfoMessage) {}
+  //return cached results
+  rpc GetCachedResults(CachedResultsMessage) returns (QueryResponseInfoMessage) {}
 }
 
 
-message CreateEntityMessage {
-  string entity = 1;
-  enum FieldType {
-    LONG = 0;
-    INT = 1;
-    FLOAT = 2;
-    DOUBLE = 3;
-    STRING = 4;
-    BOOLEAN = 5;
-  }
-  map<string, FieldType> fields = 2;
-}
-
-message EntityNameMessage {
-  string entity = 1;
-}
-
-message IndexNameMessage {
-  string index = 1;
-}
-
-message GenerateRandomEntityMessage {
-  string entity = 1;
-  int32 ntuples = 2;
-  int32 ndims = 3;
-}
-
-message AckMessage {
-  enum Code {
-    OK = 0;
-    ERROR = 1;
-  }
-  Code code = 1;
-  string message = 2;
-}
-
-//insert and update (if id exists already)
-message InsertMessage {
-  string entity = 1;
-  repeated TupleInsertMessage tuples = 2;
-
-  message TupleInsertMessage {
-    //int64 id = 1;
-    repeated float vector = 2 [packed=true];
-    map<string, string> metadata = 3;
-  }
-}
 
 
+//****  GLOBALS ****//
 
 enum IndexType {
     ecp = 0;
@@ -85,110 +65,177 @@ enum IndexType {
     vav = 5;
 }
 
-message IndexMessage {
-  string entity = 1;
-  IndexType indextype = 2;
-  int32 norm = 3;
-  map<string, string> options = 4;
+message Empty {
 }
 
-message NearestNeighbourQueryMessage {
-  repeated float query = 1 [packed=true];
-  int32 norm = 2;
-  int32 k = 3;
-  bool indexOnly = 4;
+
+
+
+
+
+//****  DATA DEFINITION REQUESTS ****//
+
+message CreateEntityMessage {
+  string entity = 1;
+  repeated FieldDefinitionMessage fields = 2;
+}
+
+message FieldDefinitionMessage {
+  string name = 1;
+  enum FieldType {
+      LONG = 0;
+      INT = 1;
+      FLOAT = 2;
+      DOUBLE = 3;
+      STRING = 4;
+      BOOLEAN = 5;
+      FEATURE = 6;
+    }
+  FieldType fieldtype = 2;
+  bool pk = 3;
+  bool unique = 4;
+  bool indexed = 5;
+}
+
+message EntityNameMessage {
+  string entity = 1;
+}
+
+message IndexNameMessage {
+  string index = 1;
+}
+
+message GenerateRandomDataMessage {
+  string entity = 1;
+  int32 ntuples = 2;
+  int32 ndims = 3;
+}
+
+message InsertMessage {
+  string entity = 1;
+  repeated TupleInsertMessage tuples = 2;
+
+  message TupleInsertMessage {
+    repeated float vector = 1 [packed=true];
+    map<string, string> metadata = 2;
+  }
+}
+
+message IndexMessage {
+  string entity = 1;
+  string column = 2;
+  IndexType indextype = 3;
+  DistanceMessage distance = 4;
+  //for possible options see each index structure
   map<string, string> options = 5;
 }
 
-message BooleanQueryMessage {
-  repeated WhereMessage where = 2;
-  repeated JoinMessage joins = 3;
-  repeated int64 prefilter = 1;
-
-  message WhereMessage {
-    string field = 1;
-    string value = 2;
-  }
-
-  message JoinMessage {
-    string table = 1;
-    repeated string columns = 2;
-  }
+message RepartitionMessage {
+  string index = 1;
+  int32 numberOfPartitions = 2;
+  bool useMetadataForPartitioning = 3;
+  repeated string columns = 4;
+  enum PartitionOptions {
+      CREATE_NEW = 0;
+      REPLACE_EXISTING = 1;
+      CREATE_TEMP = 2;
+    }
+  PartitionOptions option = 5;
 }
 
+message IndexWeightMessage {
+  string index = 1;
+  float weight = 2;
+}
+
+
+
+
+
+
+//****  QUERY REQUESTS ****//
+
 message SimpleQueryMessage {
-  string entity = 1;
-  string hint = 2;
-  NearestNeighbourQueryMessage nnq = 3;
-  BooleanQueryMessage bq = 4;
-  bool withMetadata = 5;
+  string queryid = 1;
+  string entity = 2;
+  //for hints see  ch.unibas.dmi.dbis.adam.query.handler.QueryHints, possible values
+  //include "index", "inexact", "ecp", "lsh", "pq", "sh", "exact", "va", "vaf", "vav"
+  repeated string hints = 3;
+  NearestNeighbourQueryMessage nnq = 4;
+  BooleanQueryMessage bq = 5;
+  //specifies whether we should join the structured metadata to the results
+  bool withMetadata = 6;
+  bool readFromCache = 7;
+  bool putInCache = 8;
+}
+
+message SimpleBooleanQueryMessage {
+  string queryid = 1;
+  string entity = 2;
+  BooleanQueryMessage bq = 3;
+  //specifies whether we should join the structured metadata to the results
+  bool readFromCache = 4;
+  bool putInCache = 5;
 }
 
 message SimpleSequentialQueryMessage {
-  string entity = 1;
-  NearestNeighbourQueryMessage nnq = 2;
-  BooleanQueryMessage bq = 3;
-  bool withMetadata = 4;
+  string queryid = 1;
+  string entity = 2;
+  NearestNeighbourQueryMessage nnq = 3;
+  BooleanQueryMessage bq = 4;
+  //specifies whether we should join the structured metadata to the results
+  bool withMetadata = 5;
+  bool readFromCache = 6;
+  bool putInCache = 7;
 }
 
 message SimpleSpecifiedIndexQueryMessage {
-  string index = 1;
-  NearestNeighbourQueryMessage nnq = 2;
-  BooleanQueryMessage bq = 3;
-  bool withMetadata = 4;
+  string queryid = 1;
+  string index = 2;
+  NearestNeighbourQueryMessage nnq = 3;
+  BooleanQueryMessage bq = 4;
+  //specifies whether we should join the structured metadata to the results
+  bool withMetadata = 5;
+  bool readFromCache = 6;
+  bool putInCache = 7;
 }
 
 message SimpleIndexQueryMessage {
-  string entity = 1;
-  IndexType indextype = 2;
-  NearestNeighbourQueryMessage nnq = 3;
-  BooleanQueryMessage bq = 4;
-  bool withMetadata = 5;
+  string queryid = 1;
+  string entity = 2;
+  IndexType indextype = 3;
+  NearestNeighbourQueryMessage nnq = 4;
+  BooleanQueryMessage bq = 5;
+  //specifies whether we should join the structured metadata to the results
+  bool withMetadata = 6;
+  bool readFromCache = 7;
+  bool putInCache = 8;
 }
 
 message TimedQueryMessage {
-  string entity = 1;
-  NearestNeighbourQueryMessage nnq = 2;
-  BooleanQueryMessage bq = 3;
-  int64 time = 4;
-  bool withMetadata = 5;
-}
-
-message QueryResponseInfoMessage {
-  string id = 1;
-  double confidence = 2;
-  int64 time = 3;
-  IndexType indextype = 4;
-  QueryResponseListMessage queryResponseList = 5;
-}
-
-message QueryResponseMessage {
-  int64 id = 1;
-  float distance = 2;
-  map<string, string> metadata = 3;
-}
-
-message QueryResponseListMessage {
-  repeated QueryResponseMessage responses = 1;
-}
-
-message CompoundQueryResponseListMessage {
-  repeated QueryResponseInfoMessage intermediateResponses = 1;
-  QueryResponseListMessage finalResponse = 2;
+  string queryid = 1;
+  string entity = 2;
+  NearestNeighbourQueryMessage nnq = 3;
+  BooleanQueryMessage bq = 4;
+  //maximum duration of query in ms
+  int64 time = 5;
+  bool withMetadata = 6;
 }
 
 message CompoundQueryMessage {
-  string entity = 1;
-  NearestNeighbourQueryMessage nnq = 2;
-  BooleanQueryMessage bq = 3;
-  SubExpressionQueryMessage indexFilterExpression = 4;
-  bool withMetadata = 5;
-  bool withIntermediateResults = 6;
-  string id = 7;
+  //if an id is specified, the id of the block is returned in the intermediate results
+  string queryid = 1;
+  string entity = 2;
+  NearestNeighbourQueryMessage nnq = 3;
+  BooleanQueryMessage bq = 4;
+  SubExpressionQueryMessage indexFilterExpression = 5;
+  bool withMetadata = 6;
+  //specifies whether intermediate results should be returned (i.e. of all sub-expressions and not only the final result)
+  bool withIntermediateResults = 7;
 }
 
-//experimental
 message ExpressionQueryMessage {
+  string queryid = 1;
   enum Operation {
       UNION = 0;
       INTERSECT = 1;
@@ -201,24 +248,112 @@ message ExpressionQueryMessage {
       PARALLEL = 2;
     }
 
-   SubExpressionQueryMessage left = 1;
-   Operation operation = 2;
-   OperationOrder order = 3;
-   SubExpressionQueryMessage right = 4;
-   string id = 5;
+   SubExpressionQueryMessage left = 2;
+   Operation operation = 3;
+   OperationOrder order = 4;
+   SubExpressionQueryMessage right = 5;
+
 }
 
 message SubExpressionQueryMessage {
+    string queryid = 1;
    //Any is not yet supported
    //import "google/protobuf/any.proto";
    //google.protobuf.Any left = 1;
    //Operation operation = 2;
    //google.protobuf.Any right = 3;
- oneof submessage {
-       SimpleSequentialQueryMessage ssqm = 1;
-       SimpleSpecifiedIndexQueryMessage ssiqm = 2;
-       SimpleIndexQueryMessage siqm = 3;
-       ExpressionQueryMessage eqm = 4;
+    oneof submessage {
+       SimpleSequentialQueryMessage ssqm = 2;
+       SimpleSpecifiedIndexQueryMessage ssiqm = 3;
+       SimpleIndexQueryMessage siqm = 4;
+       ExpressionQueryMessage eqm = 5;
      }
- string id = 5;
+}
+
+message NearestNeighbourQueryMessage {
+  string column = 1;
+  repeated float query = 2 [packed=true];
+  DistanceMessage distance = 3;
+  int32 k = 4;
+  //specifies whether only the candidates from the index search are returned and no exact distance computation is performed
+  bool indexOnly = 5;
+  //for possible options see each index structure
+  map<string, string> options = 6;
+  repeated int32 partitions = 7;
+}
+
+message DistanceMessage {
+  enum DistanceType {
+    minkowski = 0; //add option 'norm'
+  }
+  DistanceType distancetype = 1;
+  map<string, string> options = 2;
+}
+
+message BooleanQueryMessage {
+  repeated WhereMessage where = 2;
+  repeated JoinMessage joins = 3;
+  repeated int64 prefilter = 1;
+
+  message WhereMessage {
+    //if field ends on certain operators (e.g., != or IN), then the operation used in query is adapted, otherwise equality is used
+    string field = 1;
+    string value = 2;
+  }
+
+  message JoinMessage {
+    string table = 1;
+    repeated string columns = 2;
+  }
+}
+
+message CachedResultsMessage {
+  string queryid = 1;
+}
+
+
+
+
+
+//****  RESPONSES ****//
+message AckMessage {
+enum Code {
+  OK = 0;
+  ERROR = 1;
+}
+  Code code = 1;
+  string message = 2;
+}
+
+message EntitiesMessage {
+  AckMessage ack = 1;
+  repeated string entities = 2;
+}
+
+message EntityPropertiesMessage {
+  AckMessage ack = 1;
+  string entity = 2;
+  map<string, string> properties = 3;
+}
+
+message CompoundQueryResponseInfoMessage {
+  repeated QueryResponseInfoMessage responses = 1;
+}
+
+message QueryResponseInfoMessage {
+  //id of result (given in the query)
+  string queryid = 3;
+  //confidence in results (between 0 - 1)
+  double confidence = 4;
+  //retrieval time
+  int64 time = 5;
+  string source = 6;
+  //result list
+  repeated QueryResultMessage results = 7;
+}
+
+message QueryResultMessage {
+  int64 id = 1;
+  float distance = 2;
+  map<string, string> metadata = 3;
 }
