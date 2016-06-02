@@ -20,8 +20,9 @@ service AdamDefinition {
   rpc Count(EntityNameMessage) returns (AckMessage) {}
   //generates an entity with random data and with all available indexes (for demo purposes)
   rpc GenerateRandomData(GenerateRandomDataMessage) returns (AckMessage) {}
-  rpc ListEntities(Empty) returns (EntitiesMessage) {}
+  rpc ListEntities(EmptyMessage) returns (EntitiesMessage) {}
   rpc GetEntityProperties(EntityNameMessage) returns (EntityPropertiesMessage) {}
+  rpc RepartitionEntityData(RepartitionMessage) returns (AckMessage) {}
   rpc RepartitionIndexData(RepartitionMessage) returns (AckMessage) {}
   rpc SetIndexWeight(IndexWeightMessage) returns (AckMessage) {}
 }
@@ -30,6 +31,7 @@ service AdamSearch {
   //caches an index explicitly (before performing a query to speed up retrieval time)
   rpc CacheIndex (IndexNameMessage) returns (AckMessage) {}
   rpc CacheEntity (EntityNameMessage) returns (AckMessage) {}
+  rpc Preview(EntityNameMessage) returns (QueryResultsMessage) {}
   //performs a query on an entity with hints on which search method to use
   //(if no hint is specified a fallback is used)
   rpc DoQuery(QueryMessage) returns (QueryResultsMessage) {}
@@ -44,19 +46,51 @@ service AdamSearch {
 //****  GLOBALS ****//
 
 enum IndexType {
-    ecp = 0;
-    lsh = 1;
-    pq = 2;
-    sh = 3;
-    vaf = 4;
-    vav = 5;
+  ecp = 0;
+  lsh = 1;
+  pq = 2;
+  sh = 3;
+  vaf = 4;
+  vav = 5;
 }
 
-message Empty {
+message EmptyMessage {
+}
+
+message FeatureVectorMessage {
+  oneof feature {
+     DenseVectorMessage denseVector = 1;
+     SparseVectorMessage sparseVector = 2;
+     IntVectorMessage intVector = 3;
+  }
+}
+
+message DenseVectorMessage {
+  repeated float vector = 1 [packed=true];
+}
+
+message SparseVectorMessage {
+  repeated float vector = 1 [packed=true];
+  repeated int32 position = 2 [packed=true];
+  int32 length = 3;
+}
+
+message IntVectorMessage {
+  repeated int32 vector = 1 [packed=true];
 }
 
 
-
+message DataMessage {
+  oneof datatype {
+     int64 longData = 1;
+     int32 intData = 2;
+     float floatData = 3;
+     double doubleData = 4;
+     string stringData = 5;
+     bool booleanData = 6;
+     FeatureVectorMessage featureData = 7;
+  }
+}
 
 
 
@@ -77,6 +111,7 @@ message FieldDefinitionMessage {
       STRING = 4;
       BOOLEAN = 5;
       FEATURE = 6;
+      AUTO = 7;
     }
   FieldType fieldtype = 2;
   bool pk = 3;
@@ -103,8 +138,7 @@ message InsertMessage {
   repeated TupleInsertMessage tuples = 2;
 
   message TupleInsertMessage {
-    repeated float vector = 1 [packed=true];
-    map<string, string> metadata = 2;
+    map<string, DataMessage> data = 1;
   }
 }
 
@@ -118,16 +152,15 @@ message IndexMessage {
 }
 
 message RepartitionMessage {
-  string index = 1;
+  string entity = 1; //entity or index
   int32 numberOfPartitions = 2;
-  bool useMetadataForPartitioning = 3;
-  repeated string columns = 4;
+  repeated string columns = 3;
   enum PartitionOptions {
       CREATE_NEW = 0;
       REPLACE_EXISTING = 1;
       CREATE_TEMP = 2;
     }
-  PartitionOptions option = 5;
+  PartitionOptions option = 4;
 }
 
 message IndexWeightMessage {
