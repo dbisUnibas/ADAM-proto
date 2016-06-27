@@ -11,20 +11,23 @@ option java_package = "ch.unibas.dmi.dbis.adam.http";
 
 service AdamDefinition {
   rpc CreateEntity(CreateEntityMessage) returns (AckMessage) {}
+  rpc Count(EntityNameMessage) returns (AckMessage) {}
   rpc DropEntity(EntityNameMessage) returns (AckMessage) {}
   rpc Insert(stream InsertMessage) returns (AckMessage) {}
   //creates an index on the data
   rpc Index(IndexMessage) returns (AckMessage) {}
   rpc GenerateAllIndexes(IndexMessage) returns (AckMessage) {}
   rpc DropIndex(IndexNameMessage) returns (AckMessage) {}
-  rpc Count(EntityNameMessage) returns (AckMessage) {}
   //generates an entity with random data and with all available indexes (for demo purposes)
   rpc GenerateRandomData(GenerateRandomDataMessage) returns (AckMessage) {}
   rpc ListEntities(EmptyMessage) returns (EntitiesMessage) {}
   rpc GetEntityProperties(EntityNameMessage) returns (EntityPropertiesMessage) {}
   rpc RepartitionEntityData(RepartitionMessage) returns (AckMessage) {}
   rpc RepartitionIndexData(RepartitionMessage) returns (AckMessage) {}
-  rpc SetIndexWeight(IndexWeightMessage) returns (AckMessage) {}
+  rpc BenchmarkAndUpdateScanWeights(WeightMessage) returns (AckMessage) {}
+  rpc ResetScanWeights(EntityNameMessage) returns (AckMessage) {}
+  rpc SetScanWeight(WeightMessage) returns (AckMessage) {}
+  rpc SparsifyEntity(WeightMessage) returns (AckMessage) {}
   rpc ImportData(ImportMessage) returns (AckMessage) {}
 }
 
@@ -49,10 +52,11 @@ service AdamSearch {
 enum IndexType {
   ecp = 0;
   lsh = 1;
-  pq = 2;
-  sh = 3;
-  vaf = 4;
-  vav = 5;
+  mi = 2;
+  pq = 3;
+  sh = 4;
+  vaf = 5;
+  vav = 6;
 }
 
 message EmptyMessage {
@@ -162,11 +166,27 @@ message RepartitionMessage {
       CREATE_TEMP = 2;
     }
   PartitionOptions option = 4;
+  //Default will be handled by the API hopefully :)
+  enum Partitioner {
+      SPARK = 0;
+      RANDOM = 1;
+      CURRENT = 2;
+    }
+  Partitioner partitioner = 5;
+  //for possible options see each Repartitioner
+  //TODO Maybe allow the choice of Repartitioner here?
+  map<string, string> options = 6;
 }
 
-message IndexWeightMessage {
-  string index = 1;
-  float weight = 2;
+message UpdateWeightsMessage {
+  string entity = 1;
+  string column = 2;
+}
+
+message WeightMessage {
+  string entity = 1; //entity or index
+  string column = 2;
+  float weight = 3;
 }
 
 message ImportMessage {
@@ -185,25 +205,39 @@ message ImportMessage {
 //****  QUERY REQUESTS ****//
 
 message QueryMessage {
+  //optional queryid, which is returned by ADAMpro in the response if set in request
   string queryid = 1;
-  ProjectionMessage projection = 2; //SELECT ...
-  FromMessage from = 3; //FROM ...
-  BooleanQueryMessage bq = 6; //WHERE ...
-  NearestNeighbourQueryMessage nnq = 7; //USING DISTANCE ...
+  //SELECT ...
+  ProjectionMessage projection = 2;
+  //FROM ...
+  FromMessage from = 3;
+  //WHERE ...
+  BooleanQueryMessage bq = 6;
+  //USING DISTANCE ...
+  NearestNeighbourQueryMessage nnq = 7;
 
   //for hints see  ch.unibas.dmi.dbis.adam.query.handler.QueryHints, possible values
-  //include "index", "inexact", "ecp", "lsh", "pq", "sh", "exact", "va", "vaf", "vav", "sequential"
+  //include "index", "inexact", "ecp", "lsh", "mi", ""pq", "sh", "exact", "va", "vaf", "vav", "sequential", "predictive"
+  //hints are used to chooose whether an index scan or a sequential scan, etc. should be used
   repeated string hints = 8;
 
   //maximum duration of query in ms
   int64 time = 9;
 
+  //read query from cache if available with same query id
   bool readFromCache = 10;
+  //put query into cache with given query id
   bool putInCache = 11;
 
+  //the information level denotes how much information is returned by ADAMpro (note that depending on the level of information
+  //the query might be performed slower!)
+  //note that you can combine information levels!
   enum InformationLevel {
+      //returns simple information for the full tree, but no intermediate results
       INFORMATION_FULL_TREE = 0;
+      //returns only the information on the last step
       INFORMATION_LAST_STEP_ONLY = 1;
+      //returns all intermediate results (slow!)
       INFORMATION_INTERMEDIATE_RESULTS = 2;
       //WITH_PROVENANCE_PARTITION_INFORMATION = 2;
       //WITH_PROVENANCE_INDEX_INFORMATION = 3;
@@ -249,47 +283,78 @@ message ProjectionMessage {
     repeated string field = 1;
   }
   oneof submessage {
+    //either fieldnames are specified...
     FieldnameMessage field = 1;
+    //...or an operation
     Operation op = 2;
   }
 }
 
 message FromMessage {
   oneof source {
+    //the source for the query is either an entity
     string entity = 1;
+    //or an index (note that if you specify the index name, the hints are disregarded)
     string index = 2;
-    SubExpressionQueryMessage expression = 3;
+    //or a list of indexes
+    IndexListMessage indexes = 3;
+    //or an expression
+    SubExpressionQueryMessage expression = 4;
   }
 }
 
+message IndexListMessage {
+  repeated string indexes = 1;
+}
+
 message NearestNeighbourQueryMessage {
+  //name of the column on which to perform the nearest neighbour query
   string column = 1;
+  //query vector
   FeatureVectorMessage query = 2;
+  //weights vector; the weights are element-wise multiplied when computing the distance
   FeatureVectorMessage weights = 3;
+  //distance function to use
   DistanceMessage distance = 4;
+  //number of nearest neighbors to retrieve
   int32 k = 5;
+  //options to hand-over to scan
   map<string, string> options = 6;
   //specifies whether only the candidates from the index search are returned and no exact distance computation is performed
   bool indexOnly = 7;
+  //partitions ids to consider, optional, if not specified all partitions are considered
   repeated int32 partitions = 8;
 }
 
 message DistanceMessage {
   enum DistanceType {
-    minkowski = 0; //add option 'norm'
+    chisquared = 0;
+    correlation = 1;
+    cosine = 2;
+    hamming = 3;
+    jaccard = 4;
+    kullbackleibler = 5;
+    chebyshev = 6;
+    euclidean = 7;
+    squaredeuclidean = 8;
+    manhattan = 9;
+    minkowski = 10; //add option 'norm'
+    spannorm = 11;
   }
   DistanceType distancetype = 1;
   map<string, string> options = 2;
 }
 
 message BooleanQueryMessage {
+  //Boolean query parameters
   repeated WhereMessage where = 1;
+  //join information, to join to other entities or metadata tables
   repeated JoinMessage joins = 2;
 
   message WhereMessage {
     string field = 1;
     //if value starts on certain operators (e.g., != or IN), then the operation used in query is adapted, otherwise equality is used
-    string value = 2;
+    string value = 2; //TODO: possibly adjust to DataMessage, but in that case make sure that using where only non-feature fields can be queried
   }
 
   message JoinMessage {
@@ -297,10 +362,6 @@ message BooleanQueryMessage {
     repeated string columns = 2;
   }
 }
-
-//message TupleIDQueryMessage {
-//  repeated Any filter = 1;
-//}
 
 message ExternalHandlerQueryMessage {
   string queryid = 1;
@@ -344,13 +405,15 @@ message QueryResultsMessage {
 }
 
 message QueryResultInfoMessage {
+  //acknowledgement message returning status of query
   AckMessage ack = 1;
-  //id of result (given in the query)
+  //id of result given in the query request
   string queryid = 2;
   //confidence in results (between 0 - 1)
   double confidence = 3;
   //retrieval time
   int64 time = 4;
+  //provenance information, source that returned results
   string source = 5;
   //result list
   repeated QueryResultTupleMessage results = 6;
