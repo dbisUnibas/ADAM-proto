@@ -16,6 +16,7 @@ service AdamDefinition {
   rpc DropEntity(EntityNameMessage) returns (AckMessage) {}
   rpc ExistsEntity(EntityNameMessage) returns (ExistsMessage) {}
   rpc Insert(stream InsertMessage) returns (AckMessage) {}
+  rpc Delete(DeleteMessage) returns (AckMessage) {}
   //creates an index on the data
   rpc Index(IndexMessage) returns (AckMessage) {}
   rpc GenerateAllIndexes(IndexMessage) returns (AckMessage) {}
@@ -28,23 +29,27 @@ service AdamDefinition {
   rpc GetEntityProperties(EntityNameMessage) returns (EntityPropertiesMessage) {}
   rpc RepartitionEntityData(RepartitionMessage) returns (AckMessage) {}
   rpc RepartitionIndexData(RepartitionMessage) returns (AckMessage) {}
-  rpc AdjustScanWeights(UpdateWeightsMessage) returns (AckMessage) {}
   rpc ResetScanWeights(EntityNameMessage) returns (AckMessage) {}
   rpc SetScanWeight(WeightMessage) returns (AckMessage) {}
+  rpc AdaptScanMethods(AdaptScanMethodsMessage) returns (AckMessage) {}
   rpc SparsifyEntity(SparsifyEntityMessage) returns (AckMessage) {}
   rpc ImportData(ImportMessage) returns (AckMessage) {}
   rpc ImportDataFile(ImportDataFileMessage) returns (AckMessage) {}
   rpc ExportDataFile(EntityNameMessage) returns (ExportDataFileMessage) {}
+  rpc ListStorageHandlers(EmptyMessage) returns (StorageHandlersMessage) {}
+  //TODO: register storage handlers
 }
 
 service AdamSearch {
   //caches an index explicitly (before performing a query to speed up retrieval time)
   rpc CacheIndex (IndexNameMessage) returns (AckMessage) {}
   rpc CacheEntity (EntityNameMessage) returns (AckMessage) {}
-  rpc Preview(EntityNameMessage) returns (QueryResultsMessage) {}
+  rpc Preview(PreviewMessage) returns (QueryResultsMessage) {}
   //performs a query on an entity with hints on which search method to use
   //(if no hint is specified a fallback is used)
   rpc DoQuery(QueryMessage) returns (QueryResultsMessage) {}
+  rpc DoStreamingQuery(stream QueryMessage) returns (stream QueryResultsMessage) {}
+  rpc DoBatchQuery(BatchedQueryMessage) returns (BatchedQueryResultsMessage){}
   rpc DoProgressiveQuery(QueryMessage) returns (stream QueryResultsMessage) {}
   //return cached results
   rpc GetCachedResults(CachedResultsMessage) returns (QueryResultsMessage) {}
@@ -79,6 +84,7 @@ enum IndexType {
   sh = 5;
   vaf = 6;
   vav = 7;
+  vap = 8;
 }
 
 message EmptyMessage {
@@ -141,9 +147,8 @@ message AttributeDefinitionMessage {
   string name = 1;
   AttributeType attributetype = 2;
   bool pk = 3;
-  bool unique = 4;
-  bool indexed = 5;
   HandlerType handler = 6;
+  map<string, string> params = 7;
 }
 
 message EntityNameMessage {
@@ -167,6 +172,20 @@ message InsertMessage {
   message TupleInsertMessage {
     map<string, DataMessage> data = 1;
   }
+}
+
+
+message DeleteMessage {
+  string entity = 1;
+
+  message PredicateMessage {
+    string attribute = 1;
+    repeated DataMessage values = 2;
+    string op = 3;
+  }
+
+
+  repeated PredicateMessage predicates = 2;
 }
 
 message IndexMessage {
@@ -199,16 +218,29 @@ message RepartitionMessage {
   map<string, string> options = 6;
 }
 
-message UpdateWeightsMessage {
-  string entity = 1;
-  string attribute = 2;
-  bool benchmark = 3;
-}
-
 message WeightMessage {
   string entity = 1; //entity or index
   string attribute = 2;
   float weight = 3;
+}
+
+message AdaptScanMethodsMessage {
+  string entity = 1;
+  string attribute = 2;
+
+  enum IndexCollection {
+    EXISTING_INDEXES = 0;
+    NEW_INDEXES = 1;
+  }
+  IndexCollection ic = 3;
+
+  enum QueryCollection {
+    LOGGED_QUERIES = 0;
+    RANDOM_QUERIES = 1;
+  }
+  QueryCollection qc = 4;
+
+  map<string, string> options = 5;
 }
 
 message SparsifyEntityMessage {
@@ -239,6 +271,15 @@ message ImportDataFileMessage {
 
   FileType filetype = 4;
   bytes datafile = 5;
+}
+
+message StorageHandlersMessage {
+  repeated StorageHandlerMessage handlers = 1;
+}
+
+message StorageHandlerMessage {
+  string name = 1;
+  repeated AttributeType attributetypes = 2;
 }
 
 
@@ -298,6 +339,7 @@ message ExpressionQueryMessage {
       UNION = 1;
       INTERSECT = 2;
       EXCEPT = 3;
+      JOIN = 4;
     }
 
    enum OperationOrder {
@@ -402,9 +444,8 @@ message BooleanQueryMessage {
 
   message WhereMessage {
     string attribute = 1;
-    //if value starts on certain operators (e.g., != or IN), then the operation used in query is adapted, otherwise equality is used
-    //TODO: possibly adjust to DataMessage, but in that case make sure that using where only non-feature attributes can be queried using WHERE
-    string value = 2;
+    repeated DataMessage values = 2;
+    string op = 3;
   }
 
   message JoinMessage {
@@ -424,7 +465,14 @@ message CachedResultsMessage {
   string queryid = 1;
 }
 
+message BatchedQueryMessage {
+  repeated QueryMessage queries = 1;
+}
 
+message PreviewMessage {
+  string entity = 1;
+  int32 n = 2;
+}
 
 
 
@@ -499,4 +547,8 @@ message ExportDataFileMessage {
   AckMessage ack = 1;
   bytes definitionfile = 2;
   bytes datafile = 3;
+}
+
+message BatchedQueryResultsMessage {
+  repeated QueryResultsMessage results = 1;
 }
