@@ -15,7 +15,9 @@ service AdamDefinition {
   rpc Count(EntityNameMessage) returns (AckMessage) {}
   rpc DropEntity(EntityNameMessage) returns (AckMessage) {}
   rpc ExistsEntity(EntityNameMessage) returns (ExistsMessage) {}
-  rpc Insert(stream InsertMessage) returns (AckMessage) {}
+  rpc Insert(InsertMessage) returns (AckMessage) {}
+  rpc StreamInsert(stream InsertMessage) returns (stream AckMessage) {}
+  rpc GetNextPkValue(EntityNameMessage) returns (AckMessage) {}
   rpc Delete(DeleteMessage) returns (AckMessage) {}
   //creates an index on the data
   rpc Index(IndexMessage) returns (AckMessage) {}
@@ -73,6 +75,7 @@ enum AttributeType {
   FEATURE = 9;
   GEOMETRY = 10;
   GEOGRAPHY = 11;
+  SERIAL = 12;
 }
 
 enum IndexType {
@@ -207,11 +210,11 @@ message RepartitionMessage {
       CREATE_TEMP = 2;
     }
   PartitionOptions option = 4;
-  //Default will be handled by the API hopefully :)
+  //Default is handled by API
   enum Partitioner {
       SPARK = 0;
       RANDOM = 1;
-      CURRENT = 2;
+      ECP = 6;
     }
   Partitioner partitioner = 5;
   //for possible options see each Repartitioner
@@ -433,6 +436,7 @@ message DistanceMessage {
     manhattan = 10;
     minkowski = 11; //add option 'norm'
     spannorm = 12;
+    modulo = 13;
   }
   DistanceType distancetype = 1;
   map<string, string> options = 2;
