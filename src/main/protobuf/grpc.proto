@@ -29,6 +29,8 @@ service AdamDefinition {
   rpc GenerateRandomData(GenerateRandomDataMessage) returns (AckMessage) {}
   rpc ListEntities(EmptyMessage) returns (EntitiesMessage) {}
   rpc GetEntityProperties(EntityNameMessage) returns (EntityPropertiesMessage) {}
+  rpc GetAttributeProperties(AttributeEntityNameMessage) returns (EntityPropertiesMessage) {}
+  rpc GetIndexProperties(IndexNameMessage) returns (EntityPropertiesMessage) {}
   rpc RepartitionEntityData(RepartitionMessage) returns (AckMessage) {}
   rpc RepartitionIndexData(RepartitionMessage) returns (AckMessage) {}
   rpc ResetScanWeights(EntityNameMessage) returns (AckMessage) {}
@@ -160,6 +162,11 @@ message EntityNameMessage {
 
 message IndexNameMessage {
   string index = 1;
+}
+
+message AttributeEntityNameMessage {
+  string entity = 1;
+  string attribute = 2;
 }
 
 message GenerateRandomDataMessage {
@@ -516,6 +523,7 @@ message IndexesMessage {
   repeated IndexMessage indexes = 2;
 }
 
+//TODO: rename to properties message to make it more neutral
 message EntityPropertiesMessage {
   AckMessage ack = 1;
   string entity = 2;
