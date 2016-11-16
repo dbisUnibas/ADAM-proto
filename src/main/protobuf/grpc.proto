@@ -152,6 +152,7 @@ message AttributeDefinitionMessage {
   string name = 1;
   AttributeType attributetype = 2;
   bool pk = 3;
+  //TODO: replace handlertype by string (which matches the config)
   HandlerType handler = 6;
   map<string, string> params = 7;
 }
