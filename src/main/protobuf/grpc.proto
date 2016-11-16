@@ -28,9 +28,9 @@ service AdamDefinition {
   //generates an entity with random data and with all available indexes (for demo purposes)
   rpc GenerateRandomData(GenerateRandomDataMessage) returns (AckMessage) {}
   rpc ListEntities(EmptyMessage) returns (EntitiesMessage) {}
-  rpc GetEntityProperties(EntityNameMessage) returns (EntityPropertiesMessage) {}
-  rpc GetAttributeProperties(AttributeEntityNameMessage) returns (EntityPropertiesMessage) {}
-  rpc GetIndexProperties(IndexNameMessage) returns (EntityPropertiesMessage) {}
+  rpc GetEntityProperties(EntityPropertiesMessage) returns (PropertiesMessage) {}
+  rpc GetAttributeProperties(AttributePropertiesMessage) returns (PropertiesMessage) {}
+  rpc GetIndexProperties(IndexPropertiesMessage) returns (PropertiesMessage) {}
   rpc RepartitionEntityData(RepartitionMessage) returns (AckMessage) {}
   rpc RepartitionIndexData(RepartitionMessage) returns (AckMessage) {}
   rpc ResetScanWeights(EntityNameMessage) returns (AckMessage) {}
@@ -156,9 +156,20 @@ message IndexNameMessage {
   string index = 1;
 }
 
-message AttributeEntityNameMessage {
+message EntityPropertiesMessage {
+  string entity = 1;
+  map<string, string> options = 2;
+}
+
+message AttributePropertiesMessage {
   string entity = 1;
   string attribute = 2;
+  map<string, string> options = 3;
+}
+
+message IndexPropertiesMessage {
+  string index = 1;
+  map<string, string> options = 2;
 }
 
 message GenerateRandomDataMessage {
@@ -515,8 +526,7 @@ message IndexesMessage {
   repeated IndexMessage indexes = 2;
 }
 
-//TODO: rename to properties message to make it more neutral
-message EntityPropertiesMessage {
+message PropertiesMessage {
   AckMessage ack = 1;
   string entity = 2;
   map<string, string> properties = 3;
