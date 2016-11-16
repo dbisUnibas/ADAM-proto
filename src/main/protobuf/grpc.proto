@@ -117,7 +117,6 @@ message IntVectorMessage {
   repeated int32 vector = 1 [packed=true];
 }
 
-
 message DataMessage {
   oneof datatype {
      int64 longData = 1;
@@ -133,13 +132,6 @@ message DataMessage {
   }
 }
 
-enum HandlerType {
-  UNKNOWNHT = 0;
-  RELATIONAL = 1;
-  FILE = 2;
-  SOLR = 3;
-}
-
 
 //****  DATA DEFINITION REQUESTS ****//
 
@@ -152,9 +144,8 @@ message AttributeDefinitionMessage {
   string name = 1;
   AttributeType attributetype = 2;
   bool pk = 3;
-  //TODO: replace handlertype by string (which matches the config)
-  HandlerType handler = 6;
   map<string, string> params = 7;
+  string handler = 8;
 }
 
 message EntityNameMessage {
