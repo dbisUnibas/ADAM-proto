@@ -16,6 +16,7 @@ service AdamDefinition {
   rpc DropEntity(EntityNameMessage) returns (AckMessage) {}
   rpc ExistsEntity(EntityNameMessage) returns (ExistsMessage) {}
   rpc Insert(InsertMessage) returns (AckMessage) {}
+  rpc BatchInsert(InsertsMessage) returns (AckMessage) {}
   rpc StreamInsert(stream InsertMessage) returns (stream AckMessage) {}
   rpc GetNextPkValue(EntityNameMessage) returns (AckMessage) {}
   rpc Delete(DeleteMessage) returns (AckMessage) {}
@@ -185,6 +186,10 @@ message InsertMessage {
   message TupleInsertMessage {
     map<string, DataMessage> data = 1;
   }
+}
+
+message InsertsMessage {
+  repeated InsertMessage inserts = 1;
 }
 
 
