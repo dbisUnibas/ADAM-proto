@@ -18,7 +18,6 @@ service AdamDefinition {
   rpc Insert(InsertMessage) returns (AckMessage) {}
   rpc BatchInsert(InsertsMessage) returns (AckMessage) {}
   rpc StreamInsert(stream InsertMessage) returns (stream AckMessage) {}
-  rpc GetNextPkValue(EntityNameMessage) returns (AckMessage) {}
   rpc Delete(DeleteMessage) returns (AckMessage) {}
   //creates an index on the data
   rpc Index(IndexMessage) returns (AckMessage) {}
