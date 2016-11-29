@@ -16,7 +16,6 @@ service AdamDefinition {
   rpc DropEntity(EntityNameMessage) returns (AckMessage) {}
   rpc ExistsEntity(EntityNameMessage) returns (ExistsMessage) {}
   rpc Insert(InsertMessage) returns (AckMessage) {}
-  rpc BatchInsert(InsertsMessage) returns (AckMessage) {}
   rpc StreamInsert(stream InsertMessage) returns (stream AckMessage) {}
   rpc VacuumEntity(EntityNameMessage) returns (AckMessage) {}
   rpc Delete(DeleteMessage) returns (AckMessage) {}
@@ -37,8 +36,6 @@ service AdamDefinition {
   rpc AdaptScanMethods(AdaptScanMethodsMessage) returns (AckMessage) {}
   rpc SparsifyEntity(SparsifyEntityMessage) returns (AckMessage) {}
   rpc ImportData(ImportMessage) returns (AckMessage) {}
-  rpc ImportDataFile(ImportDataFileMessage) returns (AckMessage) {}
-  rpc ExportDataFile(EntityNameMessage) returns (ExportDataFileMessage) {}
   rpc ListStorageHandlers(EmptyMessage) returns (StorageHandlersMessage) {}
   //TODO: register storage handlers
 }
@@ -271,23 +268,7 @@ message ImportMessage {
   string password = 4;
 }
 
-message ImportDataFileMessage {
-  oneof destination {
-    //the destination for the data is an existing
-    string entity = 1;
-    //or should be created
-    CreateEntityMessage createEntity = 2;
-    //or comes from a data definition file (created at export)
-    bytes definitionfile = 3;
-  }
 
-  enum FileType {
-    UNKOWN = 0;
-  }
-
-  FileType filetype = 4;
-  bytes datafile = 5;
-}
 
 message StorageHandlersMessage {
   repeated StorageHandlerMessage handlers = 1;
