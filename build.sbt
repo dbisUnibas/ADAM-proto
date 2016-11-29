@@ -19,8 +19,8 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "io.grpc" % "grpc-all" % "1.0.0",
-  "com.trueaccord.scalapb" %% "scalapb-runtime-grpc" % (PB.scalapbVersion in PB.protobufConfig).value
+  "io.grpc" % "grpc-all" % "1.0.1",
+  "com.trueaccord.scalapb" %% "scalapb-runtime-grpc" % com.trueaccord.scalapb.compiler.Version.scalapbVersion
 )
 
 //assembly
