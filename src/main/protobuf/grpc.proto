@@ -36,6 +36,7 @@ service AdamDefinition {
   rpc AdaptScanMethods(AdaptScanMethodsMessage) returns (AckMessage) {}
   rpc SparsifyEntity(SparsifyEntityMessage) returns (AckMessage) {}
   rpc ImportData(ImportMessage) returns (AckMessage) {}
+  rpc ProtoImportData(ProtoImportMessage) returns (stream AckMessage) {}
   rpc ListStorageHandlers(EmptyMessage) returns (StorageHandlersMessage) {}
   //TODO: register storage handlers
 }
@@ -268,6 +269,9 @@ message ImportMessage {
   string password = 4;
 }
 
+message ProtoImportMessage {
+  string path = 1;
+}
 
 
 message StorageHandlersMessage {
