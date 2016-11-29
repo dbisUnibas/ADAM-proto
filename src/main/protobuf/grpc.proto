@@ -34,8 +34,6 @@ service AdamDefinition {
   rpc GetIndexProperties(IndexPropertiesMessage) returns (PropertiesMessage) {}
   rpc RepartitionEntityData(RepartitionMessage) returns (AckMessage) {}
   rpc RepartitionIndexData(RepartitionMessage) returns (AckMessage) {}
-  rpc ResetScanWeights(EntityNameMessage) returns (AckMessage) {}
-  rpc SetScanWeight(WeightMessage) returns (AckMessage) {}
   rpc AdaptScanMethods(AdaptScanMethodsMessage) returns (AckMessage) {}
   rpc SparsifyEntity(SparsifyEntityMessage) returns (AckMessage) {}
   rpc ImportData(ImportMessage) returns (AckMessage) {}
