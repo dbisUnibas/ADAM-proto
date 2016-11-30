@@ -1,18 +1,11 @@
 //protobuf
-import com.trueaccord.scalapb.{ScalaPbPlugin => PB}
 import sbtassembly.AssemblyPlugin.autoImport._
 
 name := "ADAMpro-grpc"
 
-import com.trueaccord.scalapb.{ScalaPbPlugin => PB}
-
-PB.protobufSettings
-
-//keep this part for Jenkins
-PB.runProtoc in PB.protobufConfig := (args =>
-  com.github.os72.protocjar.Protoc.runProtoc("-v300" +: args.toArray))
-version in PB.protobufConfig := "3.0.0"
-
+PB.targets in Compile := Seq(
+  scalapb.gen() -> (sourceManaged in Compile).value
+)
 
 resolvers ++= Seq(
   "Twitter" at "http://maven.twttr.com/"
