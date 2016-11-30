@@ -37,6 +37,7 @@ service AdamDefinition {
   rpc SparsifyEntity(SparsifyEntityMessage) returns (AckMessage) {}
   rpc ImportData(ImportMessage) returns (AckMessage) {}
   rpc ProtoImportData(ProtoImportMessage) returns (stream AckMessage) {}
+  rpc ProtoExportData(ProtoExportMessage) returns (AckMessage) {}
   rpc ListStorageHandlers(EmptyMessage) returns (StorageHandlersMessage) {}
   //TODO: register storage handlers
 }
@@ -272,6 +273,12 @@ message ImportMessage {
 message ProtoImportMessage {
   string path = 1;
 }
+
+message ProtoExportMessage {
+  string path = 1;
+  string entity = 2;
+}
+
 
 
 message StorageHandlersMessage {
