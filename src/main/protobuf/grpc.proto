@@ -40,6 +40,7 @@ service AdamDefinition {
   rpc ProtoExportData(ProtoExportMessage) returns (AckMessage) {}
   rpc ListStorageHandlers(EmptyMessage) returns (StorageHandlersMessage) {}
   //TODO: register storage handlers
+  rpc TransferStorageHandler(TransferStorageHandlerMessage) returns (AckMessage) {}
 }
 
 service AdamSearch {
@@ -279,8 +280,6 @@ message ProtoExportMessage {
   string entity = 2;
 }
 
-
-
 message StorageHandlersMessage {
   repeated StorageHandlerMessage handlers = 1;
 }
@@ -290,6 +289,11 @@ message StorageHandlerMessage {
   repeated AttributeType attributetypes = 2;
 }
 
+message TransferStorageHandlerMessage {
+  string entity = 1;
+  repeated string attributes = 2;
+  string handler = 3;
+}
 
 
 //****  QUERY REQUESTS ****//
