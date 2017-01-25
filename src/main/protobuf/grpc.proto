@@ -142,7 +142,6 @@ message CreateEntityMessage {
 message AttributeDefinitionMessage {
   string name = 1;
   AttributeType attributetype = 2;
-  bool pk = 3;
   map<string, string> params = 7;
   string handler = 8;
 }
@@ -216,7 +215,7 @@ message IndexMessage {
 message RepartitionMessage {
   string entity = 1; //entity or index
   int32 numberOfPartitions = 2;
-  repeated string attributes = 3;
+  string attributes = 3;
   enum PartitionOptions {
       CREATE_NEW = 0;
       REPLACE_EXISTING = 1;
