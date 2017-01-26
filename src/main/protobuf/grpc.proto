@@ -73,10 +73,10 @@ enum AttributeType {
   STRING = 6;
   TEXT = 7;
   BOOLEAN = 8;
-  FEATURE = 9;
+  VECTOR = 9;
+  SPARSEVECTOR = 13;
   GEOMETRY = 10;
   GEOGRAPHY = 11;
-  SERIAL = 12;
 }
 
 enum IndexType {
