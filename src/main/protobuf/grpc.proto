@@ -94,8 +94,8 @@ enum IndexType {
 message EmptyMessage {
 }
 
-message FeatureVectorMessage {
-  oneof feature {
+message VectorMessage {
+  oneof vector {
      DenseVectorMessage denseVector = 1;
      SparseVectorMessage sparseVector = 2;
      IntVectorMessage intVector = 3;
@@ -107,9 +107,9 @@ message DenseVectorMessage {
 }
 
 message SparseVectorMessage {
-  repeated float vector = 1 [packed=true];
-  repeated int32 position = 2 [packed=true];
-  int32 length = 3;
+    repeated int32 index = 2 [packed=true];
+    repeated float data = 1 [packed=true];
+    int32 length = 3;
 }
 
 message IntVectorMessage {
@@ -124,7 +124,7 @@ message DataMessage {
      double doubleData = 4;
      string stringData = 5;
      bool booleanData = 6;
-     FeatureVectorMessage featureData = 7;
+     VectorMessage vectorData = 7;
      //string textData = 8;
      string geographyData = 9;
      string geometryData = 10;
@@ -411,9 +411,9 @@ message NearestNeighbourQueryMessage {
   //name of the attribute on which to perform the nearest neighbour query
   string attribute = 1;
   //query vector
-  FeatureVectorMessage query = 2;
+  VectorMessage query = 2;
   //weights vector; the weights are element-wise multiplied when computing the distance
-  FeatureVectorMessage weights = 3;
+  VectorMessage weights = 3;
   //distance function to use
   DistanceMessage distance = 4;
   //number of nearest neighbors to retrieve
