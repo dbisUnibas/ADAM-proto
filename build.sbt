@@ -12,9 +12,10 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "io.grpc" % "grpc-netty" % "1.0.1",
-  "io.grpc" % "grpc-protobuf" % "1.0.1",
-  "io.grpc" % "grpc-stub" % "1.0.1",
+  "com.google.protobuf" % "protobuf-java" % "3.1.0",
+  "io.grpc" % "grpc-netty" % "1.0.3",
+  "io.grpc" % "grpc-protobuf" % "1.0.3",
+  "io.grpc" % "grpc-stub" % "1.0.3",
   "com.trueaccord.scalapb" %% "scalapb-runtime-grpc" % com.trueaccord.scalapb.compiler.Version.scalapbVersion
 )
 
