@@ -7,16 +7,19 @@ PB.targets in Compile := Seq(
   scalapb.gen() -> (sourceManaged in Compile).value
 )
 
-resolvers ++= Seq(
-  "Twitter" at "http://maven.twttr.com/"
-)
-
 libraryDependencies ++= Seq(
-  "com.google.protobuf" % "protobuf-java" % "3.1.0",
-  "io.grpc" % "grpc-netty" % "1.0.3",
   "io.grpc" % "grpc-protobuf" % "1.0.3",
   "io.grpc" % "grpc-stub" % "1.0.3",
+  "io.grpc" % "grpc-netty" % "1.0.3",
+  "io.netty" % "netty-all" % "4.1.6.Final",
+  "com.google.protobuf" % "protobuf-java" % "3.1.0",
   "com.trueaccord.scalapb" %% "scalapb-runtime-grpc" % com.trueaccord.scalapb.compiler.Version.scalapbVersion
+).map(
+  _.excludeAll(
+    ExclusionRule("org.scala-lang"),
+    ExclusionRule("org.slf4j"),
+    ExclusionRule("log4j")
+  )
 )
 
 //assembly
