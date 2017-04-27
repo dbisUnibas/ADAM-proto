@@ -267,6 +267,7 @@ message QuerySimulationMessage {
         SVM_OPTIMIZER = 0;
         NAIVE_OPTIMIZER = 1;
     }
+    Optimizer optimizer = 3;
 }
 
 message SparsifyEntityMessage {
