@@ -8,11 +8,11 @@ PB.targets in Compile := Seq(
 )
 
 libraryDependencies ++= Seq(
-  "io.grpc" % "grpc-protobuf" % "1.0.3",
-  "io.grpc" % "grpc-stub" % "1.0.3",
-  "io.grpc" % "grpc-netty" % "1.0.3",
-  "io.netty" % "netty-all" % "4.1.6.Final",
-  "com.google.protobuf" % "protobuf-java" % "3.1.0",
+  "io.grpc" % "grpc-protobuf" % "1.2.0",
+  "io.grpc" % "grpc-stub" % "1.2.0",
+  "io.grpc" % "grpc-netty" % "1.2.0",
+  "io.netty" % "netty-all" % "4.1.8.Final",
+  "com.google.protobuf" % "protobuf-java" % "3.2.0",
   "com.trueaccord.scalapb" %% "scalapb-runtime-grpc" % com.trueaccord.scalapb.compiler.Version.scalapbVersion
 ).map(
   _.excludeAll(
