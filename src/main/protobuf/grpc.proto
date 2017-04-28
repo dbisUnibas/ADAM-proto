@@ -579,8 +579,9 @@ message BatchedQueryResultsMessage {
 }
 
 message ScoredExecutionPathMessage {
-  double score = 2;
-  string scan = 3;
+  double score = 1;
+  string scan = 2;
+  string scantype = 3;
   string description = 4;
 }
 
