@@ -363,7 +363,9 @@ message ExpressionQueryMessage {
       INTERSECT = 2;
       EXCEPT = 3;
       JOIN = 4;
-    }
+      FUZZYUNION = 5;
+      FUZZYINTERSECT = 6;
+  }
 
    enum OperationOrder {
       UNKNOWNOO = 0;
@@ -376,6 +378,7 @@ message ExpressionQueryMessage {
    Operation operation = 3;
    OperationOrder order = 4;
    SubExpressionQueryMessage right = 5;
+   map<string, string> options = 6;
 }
 
 message SubExpressionQueryMessage {
