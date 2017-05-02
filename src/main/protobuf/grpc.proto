@@ -241,6 +241,11 @@ message WeightMessage {
   float weight = 3;
 }
 
+enum Optimizer {
+  SVM_OPTIMIZER = 0;
+  NAIVE_OPTIMIZER = 1;
+}
+
 message AdaptScanMethodsMessage {
   string entity = 1;
   string attribute = 2;
@@ -258,15 +263,12 @@ message AdaptScanMethodsMessage {
   QueryCollection qc = 4;
 
   map<string, string> options = 5;
+  Optimizer optimizer = 6;
 }
 
 message QuerySimulationMessage {
     string entity = 1;
     NearestNeighbourQueryMessage nnq = 2;
-    enum Optimizer {
-        SVM_OPTIMIZER = 0;
-        NAIVE_OPTIMIZER = 1;
-    }
     Optimizer optimizer = 3;
 }
 
