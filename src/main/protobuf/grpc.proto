@@ -53,7 +53,7 @@ service AdamSearch {
   rpc DoQuery(QueryMessage) returns (QueryResultsMessage) {}
   rpc DoStreamingQuery(stream QueryMessage) returns (stream QueryResultsMessage) {}
   rpc DoBatchQuery(BatchedQueryMessage) returns (BatchedQueryResultsMessage){}
-  rpc DoProgressiveQuery(QueryMessage) returns (stream QueryResultsMessage) {}
+  rpc DoParallelQuery(QueryMessage) returns (stream QueryResultsMessage) {}
   rpc DoAdvancingQuery(QueryMessage) returns (stream QueryResultsMessage) {}
 
   //return cached results
