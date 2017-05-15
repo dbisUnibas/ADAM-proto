@@ -22,7 +22,7 @@ service AdamDefinition {
   //creates an index on the data
   rpc Index(IndexMessage) returns (AckMessage) {}
   rpc GenerateAllIndexes(IndexMessage) returns (AckMessage) {}
-  rpc ExistsIndex(IndexMessage) returns (ExistsMessage) {}
+  rpc ExistsIndex(IndexExistsMessage) returns (ExistsMessage) {}
   rpc DropIndex(IndexNameMessage) returns (AckMessage) {}
   rpc ListIndexes(EntityNameMessage) returns (IndexesMessage) {}
   //generates an entity with random data and with all available indexes (for demo purposes)
@@ -214,6 +214,14 @@ message IndexMessage {
   DistanceMessage distance = 4;
   //for possible options see each index structure
   map<string, string> options = 5;
+}
+
+message IndexExistsMessage {
+  string entity = 1;
+  string attribute = 2;
+  IndexType indextype = 3;
+  DistanceMessage distance = 4;
+  bool acceptStale = 5;
 }
 
 message RepartitionMessage {
