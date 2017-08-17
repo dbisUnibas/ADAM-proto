@@ -254,6 +254,7 @@ message WeightMessage {
 enum Optimizer {
   SVM_OPTIMIZER = 0;
   NAIVE_OPTIMIZER = 1;
+  LR_OPTIMIZER = 2;
 }
 
 message AdaptScanMethodsMessage {
