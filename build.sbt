@@ -13,7 +13,8 @@ libraryDependencies ++= Seq(
   "io.grpc" % "grpc-netty" % "1.2.0",
   "io.netty" % "netty-all" % "4.1.8.Final",
   "com.google.protobuf" % "protobuf-java" % "3.2.0",
-  "com.trueaccord.scalapb" %% "scalapb-runtime-grpc" % com.trueaccord.scalapb.compiler.Version.scalapbVersion
+  "com.trueaccord.scalapb" %% "scalapb-runtime-grpc" % com.trueaccord.scalapb.compiler.Version.scalapbVersion,
+  "com.trueaccord.scalapb" %% "scalapb-json4s" % "0.3.2"
 ).map(
   _.excludeAll(
     ExclusionRule("org.scala-lang"),
