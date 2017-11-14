@@ -13,8 +13,7 @@ libraryDependencies ++= Seq(
   "io.grpc" % "grpc-netty" % "1.2.0",
   "io.netty" % "netty-all" % "4.1.8.Final",
   "com.google.protobuf" % "protobuf-java" % "3.2.0",
-  "com.trueaccord.scalapb" %% "scalapb-runtime-grpc" % com.trueaccord.scalapb.compiler.Version.scalapbVersion,
-  "com.trueaccord.scalapb" %% "scalapb-json4s" % "0.3.2"
+  "com.trueaccord.scalapb" %% "scalapb-runtime-grpc" % com.trueaccord.scalapb.compiler.Version.scalapbVersion
 ).map(
   _.excludeAll(
     ExclusionRule("org.scala-lang"),
@@ -27,8 +26,7 @@ libraryDependencies ++= Seq(
 assemblyShadeRules in assembly := Seq(
   ShadeRule.rename("io.netty.**" -> "adampro.grpc.shaded.io.netty.@1").inAll,
   ShadeRule.rename("com.fasterxml.**" -> "adampro.grpc.shaded.com.fasterxml.@1").inAll,
-  ShadeRule.rename("org.apache.**" -> "adampro.grpc.shaded.org.apache.@1").inAll,
-  ShadeRule.rename("org.json4s.**" -> "adampro.grpc.shaded.org.json4s.@1").inAll
+  ShadeRule.rename("org.apache.**" -> "adampro.grpc.shaded.org.apache.@1").inAll
 )
 
 assemblyOption in assembly :=
