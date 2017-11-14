@@ -60,6 +60,9 @@ service AdamSearch {
   rpc GetCachedResults(CachedResultsMessage) returns (QueryResultsMessage) {}
   //get scores for execution paths under empirical querying
   rpc GetScoredExecutionPath(QuerySimulationMessage) returns (ScoredExecutionPathsMessage) {}
+
+  rpc StopQuery(StopQueryMessage) returns (AckMessage) {}
+  rpc StopAllQueries(EmptyMessage) returns (AckMessage) {}
 }
 
 
@@ -281,6 +284,10 @@ message QuerySimulationMessage {
     string entity = 1;
     NearestNeighbourQueryMessage nnq = 2;
     Optimizer optimizer = 3;
+}
+
+message StopQueryMessage {
+    string jobid = 1;
 }
 
 message SparsifyEntityMessage {
