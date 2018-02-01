@@ -82,6 +82,8 @@ enum AttributeType {
   BOOLEAN = 8;
   VECTOR = 9;
   SPARSEVECTOR = 13;
+  BIT64VECTOR = 14;
+  BYTESVECTOR = 15;
   GEOMETRY = 10;
   GEOGRAPHY = 11;
 }
@@ -106,6 +108,8 @@ message VectorMessage {
      DenseVectorMessage denseVector = 1;
      SparseVectorMessage sparseVector = 2;
      IntVectorMessage intVector = 3;
+     Bit64VectorMessage bit64Vector = 4;
+     BytesVectorMessage bytesVector = 5;
   }
 }
 
@@ -114,14 +118,23 @@ message DenseVectorMessage {
 }
 
 message SparseVectorMessage {
-    repeated int32 index = 2 [packed=true];
-    repeated float data = 1 [packed=true];
-    int32 length = 3;
+  repeated int32 index = 2 [packed=true];
+  repeated float data = 1 [packed=true];
+  int32 length = 3;
 }
 
 message IntVectorMessage {
   repeated int32 vector = 1 [packed=true];
 }
+
+message Bit64VectorMessage {
+  int64 vector = 1;
+}
+
+message BytesVectorMessage {
+  bytes vector = 1;
+}
+
 
 message DataMessage {
   oneof datatype {
