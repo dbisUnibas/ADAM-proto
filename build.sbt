@@ -12,7 +12,7 @@ libraryDependencies ++= Seq(
   "io.grpc" % "grpc-stub" % "1.12.0",
   "io.grpc" % "grpc-netty" % "1.12.0",
   "io.netty" % "netty-all" % "4.1.11.Final",
-  "com.google.protobuf" % "protobuf-java" % "3.2.0",
+  "com.google.protobuf" % "protobuf-java" % "3.5.1",
   "com.trueaccord.scalapb" %% "scalapb-runtime-grpc" % com.trueaccord.scalapb.compiler.Version.scalapbVersion
 ).map(
   _.excludeAll(
