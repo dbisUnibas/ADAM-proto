@@ -63,6 +63,7 @@ service AdamSearch {
 
   rpc StopQuery(StopQueryMessage) returns (AckMessage) {}
   rpc StopAllQueries(EmptyMessage) returns (AckMessage) {}
+  rpc Ping(EmptyMessage) returns (AckMessage) {}
 }
 
 
