@@ -7,12 +7,15 @@ PB.targets in Compile := Seq(
   scalapb.gen() -> (sourceManaged in Compile).value
 )
 
+resolvers += DefaultMavenRepository
+
+
 libraryDependencies ++= Seq(
-  "io.grpc" % "grpc-protobuf" % "1.2.0",
-  "io.grpc" % "grpc-stub" % "1.2.0",
-  "io.grpc" % "grpc-netty" % "1.2.0",
-  "io.netty" % "netty-all" % "4.1.8.Final",
-  "com.google.protobuf" % "protobuf-java" % "3.2.0",
+  "io.grpc" % "grpc-protobuf" % "1.16.1",
+  "io.grpc" % "grpc-stub" % "1.16.1",
+  "io.grpc" % "grpc-netty" % "1.16.1",
+  "io.netty" % "netty-all" % "4.1.31.Final",
+  "com.google.protobuf" % "protobuf-java" % "3.6.1",
   "com.trueaccord.scalapb" %% "scalapb-runtime-grpc" % com.trueaccord.scalapb.compiler.Version.scalapbVersion
 ).map(
   _.excludeAll(
