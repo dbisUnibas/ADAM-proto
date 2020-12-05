@@ -1,0 +1,113 @@
+plugins {
+    id "com.google.protobuf" version "0.8.14"
+}
+
+group 'org.vitrivr'
+version '1.0.0'
+
+apply plugin: 'com.google.protobuf'
+apply plugin: 'idea'
+apply plugin: 'java'
+apply plugin: 'java-library'
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+
+repositories {
+    mavenCentral()
+    maven { url "https://kotlin.bintray.com/kotlinx" }
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = 'org.vitrivr'
+            artifactId = 'adampro-proto'
+            version = System.getenv().getOrDefault("MAVEN_PUBLICATION_VERSION", version.toString())
+            pom {
+                name = 'ADAMpro gRPC Driver'
+                description = 'The gRPC and ProtoBuf definitions (driver) for the ADAMpro database.'
+                url = 'https://github.com/vitrivr/adampro-protobuf/'
+                licenses {
+                    license {
+                        name = 'MIT License'
+                    }
+                }
+                developers {
+                    developer {
+                        name = 'vitrivr-team'
+                        email = 'info@vitrivr.org'
+                        organization = 'vitrivr'
+                        organizationUrl = 'https://vitrivr.org'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:https://github.com/vitrivr/adampro-protobuf.git'
+                    url = 'https://github.com/vitrivr/adampro-protobuf'
+                }
+            }
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            def releasesRepoUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+            def snapshotsRepoUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
+            name = "OSSRH"
+            url = (publishing.publications.mavenJava.version.endsWith('SNAPSHOT')) ? snapshotsRepoUrl : releasesRepoUrl
+            credentials {
+                username = System.getenv("MAVEN_USERNAME")
+                password = System.getenv("MAVEN_PASSWORD")
+            }
+        }
+    }
+}
+
+signing {
+    def signingKey = findProperty("signingKey")
+    def signingPassword = findProperty("signingPassword")
+    useInMemoryPgpKeys(signingKey, signingPassword)
+    sign publishing.publications.mavenJava
+}
+
+sourceSets {
+    main {
+        proto {
+            srcDirs += "$projectDir/src/main/protobuf"
+        }
+        java {
+            srcDirs += "$projectDir/build/generated/source/proto"
+        }
+    }
+}
+
+protobuf {
+    generatedFilesBaseDir = "$projectDir/build/generated/source/proto"
+    plugins {
+        grpc {
+            artifact = 'io.grpc:protoc-gen-grpc-java:1.33.1'
+        }
+    }
+    protoc {
+        artifact = 'com.google.protobuf:protoc:3.14.0'
+    }
+    generateProtoTasks {
+        all()*.plugins { grpc {
+            outputSubDir = 'java'
+        }}
+    }
+}
+
+dependencies {
+    /////// gRPC & Protobuf
+    compile group: 'javax.annotation', name: 'javax.annotation-api', version: '1.2'
+    compile group: 'com.google.protobuf', name: 'protobuf-java', version: '3.14.0'
+    compile group: 'io.grpc', name: 'grpc-all', version: '1.33.1'
+}
